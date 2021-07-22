@@ -1,1 +1,19 @@
-{}
+{
+  "locales": {
+    "en": "English"
+  },
+  "data": {
+    "button.play-remote": {
+      "en": "Play Remote"
+    },
+    "button.play-local": {
+      "en": "Play Local"
+    },
+    "button.exit": {
+      "en": "Exit"
+    },
+    "button.options": {
+      "en": "Options"
+    }
+  }
+}
