@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Out of Sight | Localisation</title>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+	<style>
+		h1 {
+			padding-top: 20px;
+			text-align: center;
+		}
+
+		th {
+			color:#fff;
+        }
+
+		#edit {
+			text-align: right;
+		}
+
+		#btn-edit{
+			float: right;
+			text-align: right;
+		}
+
+
+		/* The Modal (background) */
+		.modal {
+			display: none; /* Hidden by default */
+			position: fixed; /* Stay in place */
+			z-index: 1; /* Sit on top */
+			padding-top: 100px; /* Location of the box */
+			left: 0;
+			top: 0;
+			width: 100%; /* Full width */
+			height: 100%; /* Full height */
+			overflow: auto; /* Enable scroll if needed */
+			background-color: rgb(0,0,0); /* Fallback color */
+			background-color: rgba(0,0,0,0.8); /* Black w/ opacity */
+		}
+
+		/* Modal Content */
+		.modal-content {
+			background-color: #fefefe;
+			margin: auto;
+			padding: 20px;
+			border: 1px solid #888;
+			width: 50%;
+		}
+
+		/* The Close Button */
+		.close {
+			color: #aaaaaa;
+			float: right;
+			text-align: right;
+			font-size: 28px;
+			font-weight: bold;
+		}
+
+		.close:hover,
+		.close:focus {
+			color: #000;
+			text-decoration: none;
+			cursor: pointer;
+		}
+
+	</style>
+
+</head>
+<body>
+	<h1>OUT OF SIGHT - LOCALISTATION</h1>
+	
+	<!-- Input -->
+	<div class="card card-body">
+		<h2>Search</h2>
+		<input id="search-input" class="form-control" type="text">
+	</div>
+
+	<!-- Table -->
+	<table class="table table-striped table-dark">
+	
+		<tr id="headers" class="bg-info">
+			<th>ID</th>
+		</tr>
+
+		<tbody id="myTable">
+		</tbody>
+	</table>
+
+	<!-- Modal -->
+	<div id="myModal" class="modal">
+		<!-- Modal content -->
+		<div class="modal-content">
+			<span onclick="closeModal()" class="close">&times;</span>
+			<p id="dataId">Item ID</p>
+			<p id="defaultText">Default value in English</p>
+			<p id="editingLocale">Editing Locale</p>
+			<div class="card">
+				<form onsubmit="return postEntry()">
+					<input id="edit-input" class="form-control" type="text">
+					<input type="submit" value="Submit" class="btn btn-sm btn-primary">
+				</form>
+			</div>
+		</div>
+  	</div>
+
+	<script>
+		var locales = []
+		var tableData = []
+
+		$.ajax({
+			method: 'GET',
+			url: 'https://raw.githubusercontent.com/Mainframe-Games/out-of-sight-localisation/main/data.json',
+			success: function(res){
+				let data = JSON.parse(res);
+				console.log(data);
+
+				// debug values
+				data.locales['fr'] ="French";
+				data.locales['sp'] ="Spanish";
+
+				locales = data.locales
+				tableData = data.data;
+
+				buildHeaders(locales);
+				buildTable(tableData);
+			}
+		})
+
+		// search
+		$('#search-input').on('keyup', function(){
+			let val = $(this).val();
+			console.log(val);
+			var data = searchTable(val, tableData);
+			buildTable(data);
+		});
+
+		/*
+			Sets headers
+		*/
+		function buildHeaders(locales){
+			let headers = document.getElementById('headers');
+			for(let l in locales) {
+				headers.innerHTML += `<th>${locales[l]}(${l})</th>`;
+			}
+		}
+
+		/*
+			Builds the table
+		*/
+		function buildTable(data){
+			// sort data to alphabetical 
+			data = data.sort((a,b) => a.id > b.id ? 1 : -1);
+
+			console.log("Build table", data);
+
+			let table = document.getElementById('myTable');
+			table.innerHTML = '';
+			for (let i = 0; i < data.length; i++) {
+				// console.log(data[i])
+
+				let id = data[i].id;
+				let row = `<tr><td>${id}</td>`;
+
+				for(let l in locales){
+
+					let val = data[i][l];
+
+					if (val == null)
+						val = '';
+
+					// add edit button to non-english values
+					if (l === 'en'){
+						row += `<td>${val}</td>`
+					}else{
+						row += `<td>${val} <button class="btn btn-sm btn-primary btn-edit" data-id=${id} data-locale=${l}>Edit</button></td>`
+					}
+				}
+
+				row += '</tr>';
+
+				table.innerHTML += row;
+			}
+
+			$('.btn-edit').click(function() {
+				showModal($(this).data('id'), $(this).data('locale'))
+			});
+		}
+
+		/*
+			Filters table
+
+			val = input value from search input
+			data = the entire table
+		*/
+		function searchTable(val, data){
+			val = val.toLowerCase();
+			let filteredData = [];
+			for(let i = 0; i < data.length; i++){
+				let id = data[i].id.toLowerCase();
+				if (id.includes(val)){
+					filteredData.push(data[i]);
+				}
+			}
+			return filteredData;
+		}
+
+		/*
+			data: entire row data
+		*/ 
+		function showModal(dataId, locale) {
+			// get data from id
+			let data = getDataFromId(dataId);
+			console.log("Show modal with data:", locale, data);
+
+			// set current value to empty string if null
+			let curValue = data[locale];
+			if (curValue == null)
+				curValue = '';
+
+			// text default text
+			document.getElementById('dataId').innerHTML = `<center><b>${data.id}</b></center>`;
+			document.getElementById('defaultText').innerHTML = `<center>${data.en}</center>`;
+			document.getElementById('editingLocale').innerHTML = `<center>Editing Locale: ${locale}</center>`;
+			document.getElementById('edit-input').value = curValue;
+			document.getElementById('edit-input').setAttribute('data-id', dataId);
+			document.getElementById('edit-input').setAttribute('data-locale', locale);
+
+			// show modal
+			let modal = document.getElementById("myModal");
+			modal.style.display = "block";
+		}
+
+		function closeModal(){
+			let modal = document.getElementById("myModal");
+			modal.style.display = "none";
+		}
+
+		function postEntry(){
+
+			closeModal();
+
+			let id = document.getElementById('edit-input').getAttribute('data-id');
+			let locale = document.getElementById('edit-input').getAttribute('data-locale');
+			let newValue = document.getElementById('edit-input').value;
+
+			let d = getDataFromId(id)
+			console.log(d);
+
+			// if same value just ignore
+			if (newValue === ''){
+				alert("No value was set");
+				return false;
+			}
+			
+			// if same value just ignore
+			if (locale in d && d[locale] == newValue){
+				alert("Value hasn't changed");
+				return false;
+			}
+
+			console.log("Update value:", id, locale, newValue)
+
+			// POST request to github
+			setNewData(id, locale, newValue);
+			buildTable(tableData);
+		}
+
+		function getDataFromId(id){
+			for (let i in tableData) {
+				if (tableData[i].id == id)
+					return tableData[i];
+			}
+			return null;
+		}
+
+		function setNewData(id, locale, value){
+			for (let i in tableData) {
+				if (tableData[i].id == id)
+					tableData[i][locale] = value;
+			}
+			console.log("Changed table:", tableData);
+		}
+	</script>
+
+</body>
+
+</html>
