@@ -23,7 +23,5 @@
     "url": "https://github.com/Mainframe-Games/out-of-sight-localisation/issues"
   },
   "homepage": "https://github.com/Mainframe-Games/out-of-sight-localisation#readme",
-  "dependencies": {
-    "express": "^4.17.1"
-  }
+  "dependencies": {}
 }
