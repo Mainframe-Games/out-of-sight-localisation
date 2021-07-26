@@ -1,0 +1,29 @@
+{
+  "name": "out-of-sight-localisation",
+  "version": "0.0.1",
+  "description": "Localisation console for Out of Sight",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "node index.js",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Mainframe-Games/out-of-sight-localisation.git"
+  },
+  "keywords": [
+    "localisation"
+  ],
+  "author": "Brogan King",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Mainframe-Games/out-of-sight-localisation/issues"
+  },
+  "homepage": "https://github.com/Mainframe-Games/out-of-sight-localisation#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
